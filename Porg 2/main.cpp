@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const int IMG_SIZE = 32;
+int IMG_SIZE = 32;
 
 struct QuadNode {
     char type;
@@ -33,6 +33,7 @@ public:
     bool sameTree(QuadNode *, QuadNode *);
     int numBlack();
     int largestRepeat();
+    void largestDig(QuadNode *, QuadNode *, int &);
     void frmStr(string);
     void dig(QuadNode *&, int, int , stringstream &);
     void printTree();
@@ -45,7 +46,10 @@ public:
 
 string cleanInput();
 
-int main() { //iibbwwiwwbwwb
+int main() { //32iibbwwiwwbwwb
+    int size;
+    cin >> size;
+    IMG_SIZE = size;
     string input;
     cin >> input;
     QuadTree tree;
@@ -53,7 +57,7 @@ int main() { //iibbwwiwwbwwb
     //tree.printTree();
     tree.printImage();
     //cout << tree.queryTree(10, 19) << endl;
-    cout << tree.numBlack() << endl;
+    cout << tree.numBlack() << " " << tree.largestRepeat() << endl;
     return 0;
 }
 
@@ -113,7 +117,7 @@ void QuadTree::dig(QuadNode *&root, int level, int quad, stringstream &stream) {
 bool QuadTree::sameTree(QuadNode *root1, QuadNode *root2) {
     for (int quad=0; quad < 4; quad++) {
         if (root1->quads[quad] != nullptr && root2->quads[quad] != nullptr) {
-            return sameTree(root1, root2);
+            return sameTree(root1->quads[quad], root2->quads[quad]);
         }
     }
     if (root1->type != root2->type) {
@@ -130,32 +134,32 @@ char QuadTree::queryTree(int row, int col) {
 void QuadTree::printImage() {
     //cout << queryTree(9, 18) << endl;
     //cout << " ";
-    for (int a=1; a<IMG_SIZE+1; a++) {
+    //for (int a=1; a<IMG_SIZE+1; a++) {
         //cout << a%10;
-    }
+    //}
     //cout << endl;
     for (int row=1; row < IMG_SIZE+1; row++) {
         //cout << row%10;
         for (int col=0; col < IMG_SIZE; col++) {
-            cout << queryTree(row, col);
+            if (queryTree(row, col) == 'b') {
+                cout << '@';
+            } else {
+                cout << ' ';
+            }
         }
         //cout << row%10 << endl;
         cout << endl;
     }
     //cout << " ";
-    for (int a=1; a<IMG_SIZE+1; a++) {
+    //for (int a=1; a<IMG_SIZE+1; a++) {
         //cout << a%10;
-    }
+    //}
     //cout << endl;
 }
 
 char QuadTree::digTree(QuadNode *root, int row, int col, int img) {
     if(root->type == 'b' || root->type == 'w'){
-        if(root->type == 'b') {
-            return '@';
-        } else {
-            return '.';
-        }
+        return root->type;
     } else if (row <= img/2 && col < img/2) {
         return digTree(root->quads[0], row, col, img/2);
     } else if (row <= img/2 && col >= img/2) {
@@ -196,6 +200,7 @@ int QuadTree::numBlack() {
     return count;
 }
 
+
 void  QuadTree::digBlack(QuadNode * root, int &count) {
     for(int quad = 0; quad < 4; quad++) {
         if (root->quads[quad] != nullptr) {
@@ -208,7 +213,21 @@ void  QuadTree::digBlack(QuadNode * root, int &count) {
 }
 
 int QuadTree::largestRepeat(){
-    int num = 0;
-    
-    return num;
+    int biggest = 0;
+    largestDig(root, root, biggest);
+    return (IMG_SIZE/pow(2,biggest));
+}
+
+void QuadTree::largestDig(QuadNode * root1, QuadNode * root2, int &level) {
+    for(int one=0; one < 4; one++){
+        for (int two=0; two < 4; two++) {
+            if(root1->quads[one] != nullptr && root2->quads[two] != nullptr){
+                if(sameTree(root1->quads[one], root2->quads[two]) && one != two){
+                    level = root1->quads[one]->level;
+                } else if (one != two) {
+                    largestDig(root1->quads[one], root2->quads[two], level);
+                }
+            }
+        }
+    }
 }
