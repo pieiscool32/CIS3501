@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>Exam.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
 		<key>Porg 2.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -22,6 +27,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>6C58DB731E5CE6BD0033486B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>6C9DB31F1E48D5E7008549C3</key>
 		<dict>
 			<key>primary</key>

@@ -1,6 +1,5 @@
 //  Created by Christian Munte on 2/6/17
 
-
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -39,12 +38,16 @@ public:
     void printTree();
     void printElement(QuadNode *);
     void digPrint(QuadNode *);
-    void digBlack(QuadNode *root, int &);
+    void digBlack(QuadNode *, int &);
     void printImage();
     
 };
 
-string cleanInput();
+/*
+ Description:
+ PRE:
+ POST:
+ */
 
 int main() { //32iibbwwiwwbwwb
     int size;
@@ -61,25 +64,38 @@ int main() { //32iibbwwiwwbwwb
     return 0;
 }
 
-string cleanInput() {
-    string output;
-    getline(cin, output, '#');
-    output.erase(remove(output.begin(), output.end(), ' '), output.end());
-    output.erase(remove(output.begin(), output.end(), '\n'), output.end());
-    cout << output << endl;
-    return output;
-}
+/*
+Description: Constructor
+PRE: None
+POST: root = new QuadNpde
+*/
 
 QuadTree::QuadTree() {
     root =  new QuadNode;
 }
 
+/*
+ Description: creates a tree from input string
+ PRE: input != null
+ POST: root points to a tree
+ */
+
 void QuadTree::frmStr(string input) {
-    stringstream stream(input);
-    dig(root, 0, 0, stream);
-    
-    //cout << "done" << endl;
+    if(input.length() == 1) {
+        root = new QuadNode;
+        root->level = 0;
+        root->type = input[0];
+    } else {
+        stringstream stream(input);
+        dig(root, 0, 0, stream);
+    }
 }
+
+/*
+ Description: recursively builds a tree
+ PRE: root != nullptr, level >= 0, 0 <= quad <= 4, stream != null
+ POST: resursive loop or new node is made
+ */
 
 void QuadTree::dig(QuadNode *&root, int level, int quad, stringstream &stream) {
     char next;
@@ -114,69 +130,90 @@ void QuadTree::dig(QuadNode *&root, int level, int quad, stringstream &stream) {
     }
 }
 
-bool QuadTree::sameTree(QuadNode *root1, QuadNode *root2) {
-    for (int quad=0; quad < 4; quad++) {
-        if (root1->quads[quad] != nullptr && root2->quads[quad] != nullptr) {
-            return sameTree(root1->quads[quad], root2->quads[quad]);
-        }
-    }
-    if (root1->type != root2->type) {
-        return false;
-    } else {
-        return true;
-    }
-}
+/*
+ Description: Checks to see what char is at row, col
+ PRE: 0 < row < IMG_SIZE, 0 < col < IMG_SIZE
+ POST: returns 'w' or 'b'
+ */
 
 char QuadTree::queryTree(int row, int col) {
-    return digTree(root, row, col, IMG_SIZE);
+    if(root->type != 'i'){
+        return root->type;
+    } else {
+        return digTree(root, row, col, IMG_SIZE);
+    }
 }
 
-void QuadTree::printImage() {
-    //cout << queryTree(9, 18) << endl;
-    //cout << " ";
-    //for (int a=1; a<IMG_SIZE+1; a++) {
-        //cout << a%10;
-    //}
-    //cout << endl;
-    for (int row=1; row < IMG_SIZE+1; row++) {
-        //cout << row%10;
-        for (int col=0; col < IMG_SIZE; col++) {
-            if (queryTree(row, col) == 'b') {
-                cout << '@';
-            } else {
-                cout << ' ';
-            }
-        }
-        //cout << row%10 << endl;
-        cout << endl;
-    }
-    //cout << " ";
-    //for (int a=1; a<IMG_SIZE+1; a++) {
-        //cout << a%10;
-    //}
-    //cout << endl;
-}
+/*
+ Description: Recursively looks for char
+ PRE: root != nullptr, 0 < row < IMG_SIZE, 0 < col < IMG_SIZE, 0 < img < IMG_SIZE
+ POST: recursive loop or returns 'w' or 'b'
+ */
 
 char QuadTree::digTree(QuadNode *root, int row, int col, int img) {
     if(root->type == 'b' || root->type == 'w'){
         return root->type;
-    } else if (row <= img/2 && col < img/2) {
+    } else if (row <= img/2 && col <= img/2) {
         return digTree(root->quads[0], row, col, img/2);
-    } else if (row <= img/2 && col >= img/2) {
+    } else if (row <= img/2 && col > img/2) {
         return digTree(root->quads[1], row, col-(img/2), img/2);
-    } else if (row > img/2 && col >= img/2) {
+    } else if (row > img/2 && col > img/2) {
         return digTree(root->quads[2], row-(img/2), col-(img/2), img/2);
-    } else if (row > img/2 && col < img/2) {
+    } else if (row > img/2 && col <= img/2) {
         return digTree(root->quads[3], row-(img/2), col, img/2);
     } else {
         return '?';
     }
 }
 
+/*
+ Description: Prints the image in the tree
+ PRE: root points to a vaild tree
+ POST: image is printed
+ */
+
+void QuadTree::printImage() {
+    for (int row=1; row <= IMG_SIZE; row++) {
+        for (int col=1; col <= IMG_SIZE; col++) {
+            if (queryTree(row, col) == 'b') {
+                cout << '@';
+            } else {
+                cout << ' ';
+            }
+        }
+        cout << endl;
+    }
+}
+
+/*
+ Description: prints the tree
+ PRE: root pooints to a vlaid tree
+ POST: tree is printed
+ */
+
 void QuadTree::printTree() {
     printElement(root);
     digPrint(root);
 }
+
+/*
+ Description: prints each tree node
+ PRE: node != nullptr
+ POST: node is printed
+ */
+
+void QuadTree::printElement(QuadNode *node) {
+    for (int num=0; num < node->level*5; num++) {
+        cout << " ";
+    }
+    cout << node->type << " " << to_string(node->level) << endl;
+}
+
+/*
+ Description: recursively finds the tree elements
+ PRE: root != nullptr
+ POST: resursive loop or prints element
+ */
 
 void QuadTree::digPrint(QuadNode * root) {
     for(int quad = 3; quad >= 0; quad--) {
@@ -187,19 +224,26 @@ void QuadTree::digPrint(QuadNode * root) {
     }
 }
 
-void QuadTree::printElement(QuadNode *node) {
-    for (int num=0; num < node->level*5; num++) {
-        cout << " ";
-    }
-    cout << node->type << " " << to_string(node->level) << endl;
-}
+/*
+ Description: Returns the number of black pixels
+ PRE: root != nullptr
+ POST: retruns number of black pixels
+ */
 
 int QuadTree::numBlack() {
     int count = 0;
+    if(root->type != 'i') {
+        return pow(IMG_SIZE,2);
+    }
     digBlack(root, count);
     return count;
 }
 
+/*
+ Description: Recursively finds all the black elements
+ PRE: root != nullptr, count >= 0
+ POST: resursive loop or adds number of black pixels at node to count
+ */
 
 void  QuadTree::digBlack(QuadNode * root, int &count) {
     for(int quad = 0; quad < 4; quad++) {
@@ -212,11 +256,47 @@ void  QuadTree::digBlack(QuadNode * root, int &count) {
     }
 }
 
+/*
+ Description: Cheks to see if two trees are identical
+ PRE: root1 and roo2 != nullptr
+ POST: returns true or false
+ */
+
+bool QuadTree::sameTree(QuadNode *root1, QuadNode *root2) {
+    if(root1->type == root2->type) {
+        for (int quad=0; quad < 4; quad++) {
+            if (root1->quads[quad] != nullptr && root2->quads[quad] != nullptr) {
+                if(sameTree(root1->quads[quad], root2->quads[quad]) == false){
+                    return false;
+                }
+            }
+        }
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/*
+ Description: returns the largest repeating tree
+ PRE: root points to a valid tree
+ POST: returns largest tree
+ */
+
 int QuadTree::largestRepeat(){
     int biggest = 0;
+    if(root->type != 'i') {
+        return biggest;
+    }
     largestDig(root, root, biggest);
     return (IMG_SIZE/pow(2,biggest));
 }
+
+/*
+ Description: recursively finds all tree combos
+ PRE: root1 and root2 != nullptr, level >0 =
+ POST: level = largest tree
+ */
 
 void QuadTree::largestDig(QuadNode * root1, QuadNode * root2, int &level) {
     for(int one=0; one < 4; one++){
