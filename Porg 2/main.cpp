@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
@@ -32,7 +33,7 @@ public:
     bool sameTree(QuadNode *, QuadNode *);
     int numBlack();
     int largestRepeat();
-    void largestDig(QuadNode *, QuadNode *, int &);
+    void largestDig(QuadNode *, vector<QuadNode*> &);
     void frmStr(string);
     void dig(QuadNode *&, int, int , stringstream &);
     void printTree();
@@ -40,7 +41,6 @@ public:
     void digPrint(QuadNode *);
     void digBlack(QuadNode *, int &);
     void printImage();
-    
 };
 
 /*
@@ -284,30 +284,38 @@ bool QuadTree::sameTree(QuadNode *root1, QuadNode *root2) {
  */
 
 int QuadTree::largestRepeat(){
-    int biggest = 0;
+    vector<QuadNode*> nodes;
+    int ret = 0;
     if(root->type != 'i') {
-        return biggest;
+        return ret;
     }
-    largestDig(root, root, biggest);
-    return (IMG_SIZE/pow(2,biggest));
+    largestDig(root, nodes);
+    for(int one=0; one < nodes.size(); one++){
+        for (int two=0; two < nodes.size(); two++) {
+            if(sameTree(nodes[one], nodes[two]) && one != two && nodes[one]->quads[0] != nullptr && nodes[two]->quads[0] != nullptr){
+                if(nodes[one]->quads[0]->level < nodes[two]->quads[0]->level){
+                    ret = IMG_SIZE/pow(2,nodes[two]->quads[0]->level);
+                } else if (ret == 0) {
+                    ret = IMG_SIZE/pow(2,nodes[one]->quads[0]->level);
+                }
+            }
+        }
+    }
+    return ret;
 }
 
 /*
  Description: recursively finds all tree combos
- PRE: root1 and root2 != nullptr, level >0 =
- POST: level = largest tree
+ PRE: root1 != nullptr, nodes is initiated
+ POST: nodes contains all elements
+
  */
 
-void QuadTree::largestDig(QuadNode * root1, QuadNode * root2, int &level) {
-    for(int one=0; one < 4; one++){
-        for (int two=0; two < 4; two++) {
-            if(root1->quads[one] != nullptr && root2->quads[two] != nullptr){
-                if(sameTree(root1->quads[one], root2->quads[two]) && one != two){
-                    level = root1->quads[one]->level;
-                } else if (one != two) {
-                    largestDig(root1->quads[one], root2->quads[two], level);
-                }
-            }
+void QuadTree::largestDig(QuadNode * root, vector<QuadNode*> &nodes) {
+    if(root != nullptr) {
+        for(int quad=0; quad < 4; quad++) {
+            largestDig(root->quads[quad], nodes);
+            nodes.push_back(root);
         }
     }
 }
