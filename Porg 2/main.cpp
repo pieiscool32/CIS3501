@@ -57,9 +57,8 @@ int main() { //32iibbwwiwwbwwb
     cin >> input;
     QuadTree tree;
     tree.frmStr(input);
-    //tree.printTree();
+    tree.printTree();
     tree.printImage();
-    //cout << tree.queryTree(10, 19) << endl;
     cout << tree.numBlack() << " " << tree.largestRepeat() << endl;
     return 0;
 }
@@ -293,11 +292,7 @@ int QuadTree::largestRepeat(){
     for(int one=0; one < nodes.size(); one++){
         for (int two=0; two < nodes.size(); two++) {
             if(sameTree(nodes[one], nodes[two]) && one != two && nodes[one]->quads[0] != nullptr && nodes[two]->quads[0] != nullptr){
-                if(nodes[one]->quads[0]->level < nodes[two]->quads[0]->level){
-                    ret = IMG_SIZE/pow(2,nodes[two]->quads[0]->level);
-                } else if (ret == 0) {
-                    ret = IMG_SIZE/pow(2,nodes[one]->quads[0]->level);
-                }
+                return IMG_SIZE/pow(2,nodes[one]->quads[0]->level);
             }
         }
     }

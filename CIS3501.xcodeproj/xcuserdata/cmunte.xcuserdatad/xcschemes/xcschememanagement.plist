@@ -19,6 +19,11 @@
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
+		<key>Prog 3.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>4</integer>
+		</dict>
 		<key>Prog1.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -43,6 +48,11 @@
 			<true/>
 		</dict>
 		<key>6CEACED01E3101F400A5D4FE</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>6CEDBCAF1E802765001622B4</key>
 		<dict>
 			<key>primary</key>
 			<true/>
