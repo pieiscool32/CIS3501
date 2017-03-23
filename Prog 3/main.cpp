@@ -24,6 +24,7 @@
  */
 
 #include <vector>
+#include <stack>
 #include <cmath>
 #include <iostream>
 #include <algorithm>
@@ -35,7 +36,7 @@ struct edge {
 };
 
 struct input {
-    int node1, node2, weight, store;
+    int node1, node2, weight;
     
     bool operator < (const input &given) const {
         return abs(weight) < abs(given.weight);
@@ -68,6 +69,7 @@ class set {
     
     int doFind(const vector<edge> input, int find) {
         //preforms set find
+        //cout << "looking for " << find << endl;
         if(input[find].parent >= 0) {
             return doFind(input, input[find].parent);
         }
@@ -80,9 +82,11 @@ class set {
         int b = doFind(connections, nodey);
         if(a != b){
             if(a < b) {
+                //cout << a << " is now " << b << "'s parent\n";
                 connections[b].parent = a;
                 connections[a].count += connections[b].count;
             } else {
+                //cout << b << " is now " << a << "'s parent\n";
                 connections[a].parent = b;
                 connections[b].count += connections[a].count;
             }
@@ -99,9 +103,9 @@ class set {
         cout << endl;
         for (int pos = 0; pos < connections.size(); pos++) {
             if(connections[pos].parent == -1) {
-                cout << connections[pos].count;
+                cout << connections[pos].count << "  ";
             } else {
-                cout << connections[pos].parent + 1 << "  ";
+                cout << connections[pos].parent + 1 << "   ";
             }
         }
         cout << endl;
@@ -110,6 +114,7 @@ class set {
 
 class tree {
   private:
+    vector<vector<int>> combos;
     vector<input> inputs;
     vector<input> span;
     int junctions;
@@ -119,90 +124,30 @@ class tree {
         input temp;
         
         junctions = junct;
+        combinations(edges, junct-1);
         for (int num = 0; num < edges; num++) {
             cin >> x >> y >> weight;
             temp.node1 = x;
             temp.node2 = y;
             temp.weight = weight;
-            temp.store = -1;
             inputs.push_back(temp);
         }
     }
     
     int diff() {
-        restoreWeights();
         sort(span.begin(), span.end());
-        return span.back().store - span.front().store;
+        return span.back().weight - span.front().weight;
     }
-    
-    void doBias(int bias) {
-        if(bias == 0) {
-            int average = 0;
-            for(int index = 0; index < inputs.size(); index++) {
-                average += inputs[index].store;
-            }
-            bias = average / inputs.size();
-        }
-        
-        for(int index = 0; index < inputs.size(); index++) {
-            inputs[index].weight = bias - inputs[index].store;
-        }
-    }
-    
-    void storeWeights() {
-        for(int index = 0; index < inputs.size(); index++) {
-            inputs[index].store = inputs[index].weight;
-        }
-    }
-    
-    void restoreWeights() {
-        for(int index = 0; index < span.size(); index++) {
-            span[index].weight = span[index].store;
-        }
-    }
-    
-    int checkAround(int pos, int amount) {
-        int average = 0, lower = 0, upper = 0, diff = 0;
-        if(amount - pos < 0) {
-            lower = 0;
-            upper = amount;
-        } else if (amount + pos > inputs.size()) {
-            upper = inputs.size();
-            lower = upper - amount;
-        } else {
-            lower = pos - (amount/2);
-            upper = pos + (amount/2);
-        }
-        for(int index = lower; index < upper; index ++) {
-            average += inputs[index].store;
-        }
-        average = average / amount;
-        for(int index = lower; index < upper; index ++) {
-            diff += abs(average - inputs[index].store);
-        }
-        return diff;
-    }
-    
-    int clusterBias() {
-        int bias = INT_MAX, result, pos = 0;
-        for(int num = 0; num < inputs.size(); num++) {
-            result = checkAround(num, junctions-1);
-            if(result < bias) {
-                bias = result;
-                pos = num;
-            }
-        }
-        return inputs[pos].weight;
-    }
-    
+
     int findTree(vector<input> tree) {
         set mst(junctions);
+        span.erase(span.begin(), span.end());
         
         while(inputs.size() > 0 && span.size() < junctions - 1) {
             //uses kruskal Algo
-            if(!mst.doUnion(tree.front().node1, tree.front().node2)) {
+            if(!mst.doUnion(tree.front().node1 - 1, tree.front().node2 - 1)) {
                 //if it doesn't make a cycle
-                span.push_back(inputs.front());
+                span.push_back(tree.front());
                 tree.erase(tree.begin());
             } else {
                 return -1;
@@ -211,11 +156,57 @@ class tree {
         //mst.doPrint();
         return diff();
     }
+    
+    vector<input> getMatch(vector<int> list) {
+        vector<input> temp;
+        for(int index = 0; index < list.size(); index++) {
+            //cout << list[index] << " ";
+            temp.push_back(inputs[list[index] - 1]);
+        }
+        //cout << endl;
+        return temp;
+    }
+    
+    int findBest() {
+        int best = INT_MAX, result;
+        for(int index = 0; index < combos.size(); index++) {
+            result = findTree(getMatch(combos[index]));
+            //cout << result << " " << best << endl;
+            if(result != -1 && result < best) {
+                best = result;
+            }
+        }
+        return best;
+    }
+    
+    void combinations(int n, int k) {
+        vector<int> push = vector<int>(k);
+        stack<int> temp;
+        int index, value;
+        
+        temp.push(1);
+        while(temp.size() > 0) {
+            index = temp.size() - 1;
+            value = temp.top();
+            temp.pop();
+            
+            while (value <= n) {
+                push[index++] = value++;
+                temp.push(value);
+                if(index == k) {
+                    combos.push_back(push);
+                    break;
+                }
+            }
+        }
+    }
 };
+
 
 int main() { //4 5 1 2 3 1 3 5 1 4 6 2 4 6 3 4 7
     int junct, edges;
     vector<tree> inpt;
+    
     cin >> junct >> edges;
     while (junct != 0) {
         //cout << junct << " junctions and " << edges << " edges\n";
@@ -223,8 +214,8 @@ int main() { //4 5 1 2 3 1 3 5 1 4 6 2 4 6 3 4 7
         inpt.push_back(given);
         cin >> junct >> edges;
     }
-    for (int index = 0; index < inpt.size(); index++) {
-        cout << inpt[index].findTree(inpt[index].clusterBias()) << endl;
+    for(int index = 0; index < inpt.size(); index++) {
+        cout << inpt[index].findBest() << endl;
     }
     return 0;
 }
