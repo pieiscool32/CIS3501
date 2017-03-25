@@ -47,6 +47,11 @@ struct input {
     }
 };
 
+struct combo {
+    vector<input> list;
+    int average;
+};
+
 class set {
   private:
     vector<edge> connections;
@@ -114,7 +119,7 @@ class set {
 
 class tree {
   private:
-    vector<vector<int>> combos;
+    vector<combo> combos;
     vector<input> inputs;
     vector<input> span;
     int junctions;
@@ -124,7 +129,6 @@ class tree {
         input temp;
         
         junctions = junct;
-        combinations(edges, junct-1);
         for (int num = 0; num < edges; num++) {
             cin >> x >> y >> weight;
             temp.node1 = x;
@@ -132,6 +136,7 @@ class tree {
             temp.weight = weight;
             inputs.push_back(temp);
         }
+        combinations(edges, junct-1);
     }
     
     int diff() {
@@ -157,20 +162,46 @@ class tree {
         return diff();
     }
     
-    vector<input> getMatch(vector<int> list) {
+    combo getMatch(vector<int> list) {
+        int avg = 0;
         vector<input> temp;
+        combo tmp;
+        
         for(int index = 0; index < list.size(); index++) {
             //cout << list[index] << " ";
+            avg += inputs[list[index] - 1].weight;
             temp.push_back(inputs[list[index] - 1]);
         }
         //cout << endl;
-        return temp;
+        tmp.list = temp;
+        tmp.average = avg / list.size();
+        return tmp;
+    }
+    
+    void optimize() {
+        int diff, overallAvg = 0, point = 0;
+        for (int each = 0; each < combos.size(); each++) {
+            diff = 0;
+            for (int index = 0; index < combos[each].list.size(); index++) {
+                diff += abs(combos[each].average - combos[each].list[index].weight);
+            }
+            overallAvg += diff;
+            combos[each].average = diff;
+        }
+        overallAvg = overallAvg / combos.size();
+        while(point < combos.size()) {
+            if(combos[point].average > overallAvg) {
+                combos.erase(combos.begin() + point);
+            } else {
+                point++;
+            }
+        }
     }
     
     int findBest() {
         int best = INT_MAX, result;
         for(int index = 0; index < combos.size(); index++) {
-            result = findTree(getMatch(combos[index]));
+            result = findTree(combos[index].list);
             //cout << result << " " << best << endl;
             if(result != -1 && result < best) {
                 best = result;
@@ -194,7 +225,7 @@ class tree {
                 push[index++] = value++;
                 temp.push(value);
                 if(index == k) {
-                    combos.push_back(push);
+                    combos.push_back(getMatch(push));
                     break;
                 }
             }
@@ -203,7 +234,7 @@ class tree {
 };
 
 
-int main() { //4 5 1 2 3 1 3 5 1 4 6 2 4 6 3 4 7
+int main() { //4 5 1 2 3 1 3 5 1 4 6 2 4 6 3 4 7 0 0
     int junct, edges;
     vector<tree> inpt;
     
@@ -215,6 +246,7 @@ int main() { //4 5 1 2 3 1 3 5 1 4 6 2 4 6 3 4 7
         cin >> junct >> edges;
     }
     for(int index = 0; index < inpt.size(); index++) {
+        inpt[index].optimize();
         cout << inpt[index].findBest() << endl;
     }
     return 0;
