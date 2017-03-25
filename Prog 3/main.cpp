@@ -33,6 +33,12 @@ using namespace std;
 
 struct edge {
     int parent, weight, count;
+    
+    edge(int par = -1, int wei = 0, int cnt = -1) {
+        parent = par;
+        weight = par;
+        count = cnt;
+    }
 };
 
 struct input {
@@ -47,30 +53,15 @@ struct input {
     }
 };
 
-struct combo {
-    vector<input> list;
-    int average;
-};
-
 class set {
   private:
     vector<edge> connections;
   public:
     set(int junctions){
-        edge temp;
-        
         for(int pos = 0; pos < junctions; pos++) {
-            temp.weight = 0;
-            temp.parent = -1;
-            temp.count = -1;
-            connections.push_back(temp);
+            connections.push_back(edge());
         }
     }
-    
-    vector<edge> getSet() {
-        return connections;
-    }
-    
     
     int doFind(const vector<edge> input, int find) {
         //preforms set find
@@ -101,6 +92,20 @@ class set {
         return false;
     }
     
+    bool isTree() {
+        int count = 0;
+        for(int index = 0; index < connections.size(); index ++) {
+            if(connections[index].parent != -1) {
+                count++;
+            }
+        }
+        if(count == connections.size() - 1) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+    
     void doPrint() {
         for (int pos = 0; pos < connections.size(); pos++) {
             cout << pos+1 << "   ";
@@ -119,7 +124,6 @@ class set {
 
 class tree {
   private:
-    vector<combo> combos;
     vector<input> inputs;
     vector<input> span;
     int junctions;
@@ -136,101 +140,53 @@ class tree {
             temp.weight = weight;
             inputs.push_back(temp);
         }
-        combinations(edges, junct-1);
     }
     
     int diff() {
         sort(span.begin(), span.end());
         return span.back().weight - span.front().weight;
     }
-
-    int findTree(vector<input> tree) {
+    
+    int doKruskal(vector<input> tree) {
         set mst(junctions);
         span.erase(span.begin(), span.end());
         
-        while(inputs.size() > 0 && span.size() < junctions - 1) {
+        while(tree.size() > 0 && span.size() < junctions - 1) {
             //uses kruskal Algo
             if(!mst.doUnion(tree.front().node1 - 1, tree.front().node2 - 1)) {
                 //if it doesn't make a cycle
                 span.push_back(tree.front());
                 tree.erase(tree.begin());
             } else {
-                return -1;
+                tree.erase(tree.begin());
             }
         }
         //mst.doPrint();
-        return diff();
+        if(mst.isTree()) {
+            return diff();
+        } else {
+            return -1;
+        }
     }
-    
-    combo getMatch(vector<int> list) {
-        int avg = 0;
-        vector<input> temp;
-        combo tmp;
+
+    int findTree() {
+        int smallest = INT_MAX, result;
+        sort(inputs.begin(), inputs.end());
         
-        for(int index = 0; index < list.size(); index++) {
-            //cout << list[index] << " ";
-            avg += inputs[list[index] - 1].weight;
-            temp.push_back(inputs[list[index] - 1]);
-        }
-        //cout << endl;
-        tmp.list = temp;
-        tmp.average = avg / list.size();
-        return tmp;
-    }
-    
-    void optimize() {
-        int diff, overallAvg = 0, point = 0;
-        for (int each = 0; each < combos.size(); each++) {
-            diff = 0;
-            for (int index = 0; index < combos[each].list.size(); index++) {
-                diff += abs(combos[each].average - combos[each].list[index].weight);
+        while(inputs.size() >= junctions - 1) {
+            result = doKruskal(inputs);
+            //cout << result << " | " << smallest << endl;
+            if (result < smallest && result != -1) {
+                smallest = doKruskal(inputs);
             }
-            overallAvg += diff;
-            combos[each].average = diff;
+            inputs.erase(inputs.begin());
         }
-        overallAvg = overallAvg / combos.size();
-        while(point < combos.size()) {
-            if(combos[point].average > overallAvg) {
-                combos.erase(combos.begin() + point);
-            } else {
-                point++;
-            }
+        if (smallest == INT_MAX) {
+            return -1;
         }
+        return smallest;
     }
-    
-    int findBest() {
-        int best = INT_MAX, result;
-        for(int index = 0; index < combos.size(); index++) {
-            result = findTree(combos[index].list);
-            //cout << result << " " << best << endl;
-            if(result != -1 && result < best) {
-                best = result;
-            }
-        }
-        return best;
-    }
-    
-    void combinations(int n, int k) {
-        vector<int> push = vector<int>(k);
-        stack<int> temp;
-        int index, value;
-        
-        temp.push(1);
-        while(temp.size() > 0) {
-            index = temp.size() - 1;
-            value = temp.top();
-            temp.pop();
-            
-            while (value <= n) {
-                push[index++] = value++;
-                temp.push(value);
-                if(index == k) {
-                    combos.push_back(getMatch(push));
-                    break;
-                }
-            }
-        }
-    }
+
 };
 
 
@@ -246,8 +202,7 @@ int main() { //4 5 1 2 3 1 3 5 1 4 6 2 4 6 3 4 7 0 0
         cin >> junct >> edges;
     }
     for(int index = 0; index < inpt.size(); index++) {
-        inpt[index].optimize();
-        cout << inpt[index].findBest() << endl;
+        cout << inpt[index].findTree() << endl;
     }
     return 0;
 }
